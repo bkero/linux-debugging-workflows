@@ -1,0 +1,61 @@
+Debugging Workflows for Linux
+=============================
+
+Talking about system level debugging - Webdev debugging can be an entirely separate talk
+
+Mostly about tools and techniques
+
+Will cover techniques, highlighting tools used for each. Include a story with each
+
+Debugging workflows are very similar or the same for many different kinds of applications
+
+Let's start out with an example:
+    (Screenshot or codeblock explaining segfault
+
+
+Techniques
+
+    *) Coax more output or check logs
+        See if program has --verbose, --foreground, or --debug options)
+        Check system logs (journalctl -xf, tail -f /var/log/*)
+        Check kernel logs (dmesg -w)
+        You don't live in a vacuum. Find the appropriate error message (sometimes harder than it sounds), search for that.
+    *) Bad program assumptions
+        Check expected user (are you running as root when it's not expecting? some files owned by another user?)
+            Look in $HOME for files owned by root. $(find ~ -user root)
+        Program is expecting different library versions
+            Should be pretty obvious: most commonly cause segfaults
+    *) Trace program execution (multiple levels of depth: strace, ltrace, gdb)
+        strace - traces the system calls made by each process (-f to follow children processes, -p to trace running proc)
+            Traces system calls made by each process
+            -f follows children
+            -p runs against an existing process
+            -c analyzes how much time is spent in each system call, can be used for benchmarking
+        ltrace - similar to strace, but traces external library calls (give example)
+        gdb - Runs program interactively, can step through each instruction. Kind of useless without debug symbols
+            Some distros provide packages for debug symbols (Redhat, shoutout, produced automatically with rpmbuild/spec)
+        lsof
+            Very simple, just lists open filehandles
+            Everything is a file in linux:
+                Network connections
+                Opened libraries
+                Listening sockets
+        systemtap - debugging suite including it's own programming language for complex debugging
+            Lots of cargo-cult scripts
+            https://sourceware.org/systemtap/examples/
+        lttng - Linux Tracer Toolkit NG
+            Only sets tracepoints in kernel, libraries, and programs
+            Created to trace things that were difficult to trace otherwise
+            Good for solving perf problems, especially in realtime env and parallelism
+            $ apt-get install lttng - needs kernel modules
+
+    *) Network traffic sniffing
+        Sometimes a problem is due to a bug in the code, but it is only triggered when you receive network traffic from a bad actor
+        tcpdump -i $INTERFACE port 80 -- dumps 
+        Wireshark - Step through traffic, inspect streams
+    *) You don't live in a vacuum. Find the appropriate error message (sometimes harder than it sounds), search for that.
+
+    *) Write your shell scripts (system scripts) stricter to prevent more errors:
+        Yes I know you write shell scripts
+        set -euo pipefail # bash's unofficial 'strict' mode
+        shellcheck
