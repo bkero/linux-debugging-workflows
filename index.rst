@@ -9,6 +9,11 @@ Ben Kero
 Topics
 ------
 
+.. figure:: /_static/tux.png
+    :align: right
+
+    https://en.wikipedia.org/wiki/Tux
+
 * Spelunking for logs
 * Finding bad program assumptions
 * Tracing program and I/O execution
@@ -22,18 +27,23 @@ Topics
 Familiarity
 -----------
 
+.. figure:: /_static/haxor.jpg
+    :align: right
+
+    https://commons.wikimedia.org/wiki/File:Backlit_keyboard.jpg
+
 .. rst-class:: build
 
 * Command-line familiarity
 
-  - Common commands (cd, ls, ps, cat)
-  - Arguments (ls -l)
-  - Files and directories (/home/bkero, /usr/bin)
-  - Networking (ping google.com)
+  - Common commands (``cd``, ``ls``, ``cat``)
+  - Arguments (``ls -l``)
+  - Files and directories (``/home/bkero``, ``/usr/bin``)
+  - Networking (``ping google.com``)
 
 * Linux familiarity
 
-  - Processes (cron, pulseaudio)
+  - Processes (``cron``, ``pulseaudio``)
   - Libraries
   - Open file handles
 
@@ -56,6 +66,9 @@ Let's Start
 
 Logs
 ----
+
+.. figure:: /_static/logtruck.jpg
+    :align: right
 
 * Kernel logs - Hardware & low-level OS problems
 * System logs - Services that perform base userland tasks
@@ -93,6 +106,12 @@ Application logs
 
 Syslog
 ------
+
+.. figure:: /_static/slapchop.jpg
+    :align: right
+
+    https://www.telebrandsindia.com/Product_Images/slapchop%20main.jpg
+
 * Daemon
 * Multi-process + Multi-user + Multi-system
 * Examples: *syslog-ng*, *rsyslog*, *metalog*
@@ -109,7 +128,7 @@ System logs
 -----------
 
 * Services that your system runs
-* Examples: *dhclient*, *X*, *cron*
+* Examples: ``dhclient``, ``X``, ``cron``
 * Collected to syslog or systemd
 
 .. code-block:: bash
@@ -130,7 +149,7 @@ System logs
 
 
 .. note::
-    * These are a little tricker to find. If you're running a newer systemd-based distro 
+    * These are a little tricker to find. If you're running a newer systemd-based distro
 
 Kernel logs
 -----------
@@ -161,10 +180,10 @@ Dealing with log files
 
 .. rst-class:: build
 
-* Try passing --verbose or --debug options
-* Run it 'by hand' using the --foreground flag
+* Try passing ``--verbose`` or ``--debug`` options
+* Run it 'by hand' using ``--foreground``
 * Look at another 'level' of log
-* tail -f (dmesg -w) is your friend
+* ``tail -f (dmesg -w)`` is your friend
 * You don't live in a vacuum
 
 .. note::
@@ -217,13 +236,13 @@ Example #1
 ----------
 
 * .. code-block:: bash
-   
+
    $ ls /var/log
    apache2
    cups
    dpkg.log
    mysql.log
-   
+
 * .. code-block:: bash
 
    $ ls /var/log/apache2
@@ -239,7 +258,7 @@ Example #1
     * You know that good programs keep log files.
     * You think apache is a good program.
     * So naturally you would expect apache to have log files.
-    * Since it's a system-level service you know to look for logs in /var/log. 
+    * Since it's a system-level service you know to look for logs in /var/log.
 
 .. slide::
 
@@ -257,6 +276,7 @@ Bad Program Assumptions
 .. figure:: /_static/TODO.jpg
 
 .. note::
+
     * Let's talk about bad program assumptions
     * These are the most common ones
 
@@ -285,6 +305,11 @@ Users + Groups
 Configuration
 -------------
 
+.. figure:: /_static/spaceshuttle.jpg
+    :align: right
+
+    https://upload.wikimedia.org/wikipedia/commons/3/30/STSCPanel.jpg
+
 .. rst-class:: build
 
 * Is your program configured correctly?
@@ -308,7 +333,7 @@ Configuration
 
 .. notes::
    * One thing you should ask yourself is if you mucked with the configs. Was it working before?
-   * There's a common order of config option parsing. 
+   * There's a common order of config option parsing.
    * Some programs such as Apache have a config checker. Here's an example.
 
 Syntax Checkers
@@ -385,10 +410,9 @@ strace - the system call tracer
 strace - useful incantations
 ----------------------------
 
-* strace -f -p $PID
-* strace -e open -p $PID 2>&1 | grep $FILE
-* strace -c -f -p $PID ... ^C
-
+* ``strace -f -p $PID``
+* ``strace -e open -p $PID 2>&1 | grep $FILE``
+* ``strace -c -f -p $PID ... ^C``
 
 ltrace - the library call tracer
 --------------------------------
@@ -401,30 +425,51 @@ ltrace - the library call tracer
 lsof
 ----
 
-* Lists open file handles (including networks, listening sockets, linked libraries)
+.. figure:: /_static/filingcabinet.jpg
+    :align: right
+
+    http://abovethelaw.com/wp-content/uploads/2013/01/file-cabinet3.jpg
+
+* Lists open file handles
+
+    * networks
+    * listening sockets
+    * linked libraries
 
 My program is stuck, halp!
 --------------------------
 
 .. rst-class:: build
 
-* "There is seldom a problem that can't be figured using strace and lsof"
+.. figure:: /_static/strace-lsof-wisdom.png
+    :align: center
+
+    There is seldom a problem that can't be figured out using strace and lsof
 
 .. note::
     * This is a saying of mine. I'm trying to turn it into a piece of wisdom.
 
 gdb
 ---
+
 * The big guns, step-through debugger
+
+.. figure:: /_static/gdb-cheatsheet.png
+    :align: center
+
+    https://ysoh.files.wordpress.com/2012/05/screen-shot-2012-05-01-at-ec98a4eca084-9-15-59.png
+
 
 systemtap
 ---------
+
 * The debugging suite
 * Has its own programming language
 * Lots of cargo-cult scripts, (yay dtrace!)
 
 lttng
 -----
+
 * Linux tracer toolkit Nextgen
 * Created to trace things that were difficult to trace otherwise
 * Good for solving perf problems
@@ -433,6 +478,8 @@ lttng
 
 The problem must be somewhere else
 ----------------------------------
+
 * Network sniffing!
 * tcpdump for command-line
 * Wireshark for record/analyze streams/replay
+
