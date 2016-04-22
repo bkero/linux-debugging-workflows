@@ -12,16 +12,30 @@ Topics
 * Spelunking for logs
 * Finding bad program assumptions
 * Tracing program and I/O execution
-* (Specific applications can their own talk)
+* Specific to Linux
 
 .. note::
     * We're talking about system level debugging. Specific applications can have their own talks.
+    * I'm not going to teach you about reading tracebacks from python or javascript or java
+    * These things are specific to Linux. Individual applications could easily have their own presentations
 
-Expectations
-------------
+Familiarity
+-----------
+
+.. rst-class:: build
 
 * Command-line familiarity
+
+  - Common commands (cd, ls, ps, cat)
+  - Arguments (ls -l)
+  - Files and directories (/home/bkero, /usr/bin)
+  - Networking (ping google.com)
+
 * Linux familiarity
+
+  - Processes (cron, pulseaudio)
+  - Libraries
+  - Open file handles
 
 .. note::
     * I expect some command-line familiarity. Readline wizardry not required.
@@ -31,8 +45,10 @@ Expectations
 Let's Start
 -----------
 
-* TODO: include logride.jpg
-* https://www.flickr.com/photos/ocarchives/5333790414/ CC-BY 2.0
+  .. figure:: /_static/logride.jpg
+     :align: center
+
+     flickr.com/photos/ocarchives/5333790414/ CC-BY 2.0
 
 .. note::
     * Where do we start? Yes, logs. There are logs all over the system and they are the first place you should look.
@@ -41,8 +57,8 @@ Let's Start
 Logs
 ----
 
-* Kernel logs - Hardware and low-level OS problems (kernel)
-* System logs - Services that perform higher-level tasks
+* Kernel logs - Hardware & low-level OS problems
+* System logs - Services that perform base userland tasks
 * Application log files - Even higher level processes
 
 .. note::
@@ -53,10 +69,10 @@ Logs
 Application logs
 ----------------
 
-* Typically log to /var/log or /opt/$APP/log if they're run system-wide
-* If run as the user, might be logged in $HOME/.local/share
-* Examples: apache2, mysql, Steam
-* Sometimes they can log to the syslog
+* Root/dedicated user: /var/log or /opt/$APP/log
+* Normal user: $HOME/.local/share
+* apache2, mysql, Steam
+* Some use syslog
 
 .. code-block:: bash
 
@@ -66,20 +82,35 @@ Application logs
 
 .. code-block:: bash
 
-   $ grep failed /var/log/elasticsearch/elasticsearch.log.*
-   [2015-06-09 01:00:26,394][WARN ][discovery.zen.ping.multicast]
-   [elasticsearch1] failed to read requesting data from /10.0.3.1:54328
+   $ tail -1 $HOME/.local/share/Steam/logs/stats_log.txt
+   [2016-04-12 16:55:47] [AppID 63710] CAPIJobRequestUserStats -
+   no stats data in server response, we must be up to date
 
 .. note::
     * There is an exception. Some smaller applications will log to 'syslog' and show up in system logs instead of their own application logs.
     * If you're writing a small application, instead of implementing logging you might want to read man 1 logger.
     * Syslog is a process running on the system to manage logs. It can do clever things like ship them over a network to a central log server
 
+Syslog
+------
+* Daemon
+* Multi-process + Multi-user + Multi-system
+* Examples: *syslog-ng*, *rsyslog*, *metalog*
+* Multiple 'levels' of entries
+* Rotates + Compresses ( + slices + dices)
+
+.. note::
+    * TODO: Slapchop logo?
+    * The syslog daemon is surprisingly intelligent. It has different log levels (like severity), can automatically rotate/gzip logs, and can ship/aggregate from remote hosts.
+    * Your distro probably comes with this. There are different ones like metalog, syslog-ng, or rsyslog. Each has different config and feature set.
+    * If you're just reading the syslog file you probably don't care about any of that.
+
 System logs
 -----------
 
+* Services that your system runs
 * Examples: *dhclient*, *X*, *cron*
-* Often globbed together
+* Collected to syslog or systemd
 
 .. code-block:: bash
     :caption: not systemd
@@ -104,8 +135,9 @@ System logs
 Kernel logs
 -----------
 
-* These are things like hardware problems or really bad memory-related userland crashes
-* If you suspect a hardware problem, good to start here first
+* Hardware problems
+* Nasty memory-related userspace crashes
+* Not written to a file
 
 .. code-block:: bash
 
@@ -124,12 +156,14 @@ Kernel logs
     * Here note the format: the first number (in braces) is seconds since the system booted. The second word is the kernel system or process. The third is the message.
     * Look at the man page for 'dmesg'. Lots of cool options including a wait.
 
-Some Tips for dealing with log files
-------------------------------------
+Dealing with log files
+----------------------
+
+.. rst-class:: build
 
 * Try passing --verbose or --debug options
-* Run it 'by hand' with something like --foreground
-* Try moving from application -> system level or system -> kernel
+* Run it 'by hand' using the --foreground flag
+* Look at another 'level' of log
 * tail -f (dmesg -w) is your friend
 * You don't live in a vacuum
 
@@ -144,14 +178,12 @@ Some Tips for dealing with log files
 Example #1
 ----------
 
-* You're the new sysadmin
-* New work order: Make web site go
-* Here is the web site contents
+.. rst-class:: build
 
-Example #1
-----------
+- You're the new sysadmin
+- New work order: Make web site go
 
-.. code-block:: bash
+- .. code-block:: bash
 
    $ cat /etc/apache2/sites-enabled/001-foobar.com.conf
    <VirtualHost 0.0.0.0:80>
@@ -166,14 +198,16 @@ Example #1
    ... [ OK ]
 
 .. note::
-    * Let's start with this example. You've just started your new job as a sysadmin for FoobarCom. You've been tasked with enabling the serving of the new web site that the guys in webdev have been cooking up. You have a very basic setup of a fresh Debian box running apache.
+    * You've just started your new job as a sysadmin for FoobarCom. You've been tasked with enabling the serving of the new web site that the guys in webdev have been cooking up. You have a very basic setup of a fresh Debian box running apache.
     * You've found a vhost example from stackoverflow.com (good site, but not without its faults), and are copypasta-ing that for production.
     * I know you can find the problem, but let's imagine that it's 4PM, you want to get to the pub, and you close the file before you realize you forgot to fill out the path
 
-Example #1
-----------
+.. slide::
 
-* TODO: Pic of 404
+    .. figure:: /_static/404.jpg
+       :class: fill
+
+       http.cat
 
 .. note::
     * DNS is already set up, don't worry about that part.
@@ -182,48 +216,202 @@ Example #1
 Example #1
 ----------
 
-* Good programs keep log files
-* Apache is a good program (*)
-* You expect Apache to have log files
-
-.. code-block:: bash
+* .. code-block:: bash
    
    $ ls /var/log
-   ...apache2...
-   $ ls /var/log/apache2
-   ...error.log...
-   $ tail /var/log/apache2/error.log
+   apache2
+   cups
+   dpkg.log
+   mysql.log
+   
+* .. code-block:: bash
 
-* YOU MADE A TYPO YOU JERK
+   $ ls /var/log/apache2
+   access.log
+   error.log
+
+* .. code-block:: bash
+
+   $ tail /var/log/apache2/error.log
+   [109283] ERROR: /var/www/REPLACEME does not exist.
 
 .. note::
-    * You know that good programs keep log files. You think apache is a good program. So naturally you would expect apache to have log files. Since it's a system-level service you know to look for logs in /var/log. 
+    * You know that good programs keep log files.
+    * You think apache is a good program.
+    * So naturally you would expect apache to have log files.
+    * Since it's a system-level service you know to look for logs in /var/log. 
+
+.. slide::
+
+    .. figure:: /_static/logend.jpg
+       :class: fill
+
+       commons.wikimedia.org/wiki/File:Spruce_Log_on_end_(10867)-Relic38.JPG CC-SA 3.0
+
+    .. note::
+        * Okay, onto other things
 
 Bad Program Assumptions
 -----------------------
-* Are you running as the right user? (whoami)
-* Are you passing the program weird options (ps)
-* Are you running the right library version? (ld)
+
+.. figure:: /_static/TODO.jpg
+
+.. note::
+    * Let's talk about bad program assumptions
+    * These are the most common ones
+
+Users + Groups
+--------------
+
+.. code-block:: bash
+
+   $ sudo su - www-data -s /bin/sh
+
+   $ whoami
+   www-data
+
+   $ groups
+   www-data ssl-cert bin
+
+   $ ls -lh /var/www/index.html
+   -rw-r----- 1 root root 500M Apr 20 00:01 /var/www/index.html
+
+.. note::
+    * Is your process running as the right user?
+    * Has it EVER ran as a different user?
+    * If so, there could be wrong perms on some times.
+    * More on that later.
+
+Configuration
+-------------
+
+.. rst-class:: build
+
+* Is your program configured correctly?
+* Common order of config parsing
+
+  - Global config file
+  - Local config file
+  - Environment variables
+  - Command-line arguments/flags
+
+* Config syntax checker
+
+* .. code-block:: bash
+
+      $ ps ax | grep apache
+      429 ?        Ss     4:23 /usr/sbin/apache2 -k start
+
+* .. code-block:: bash
+
+      $ apache2ctl -t -D DUMP_VHOSTS
+
+.. notes::
+   * One thing you should ask yourself is if you mucked with the configs. Was it working before?
+   * There's a common order of config option parsing. 
+   * Some programs such as Apache have a config checker. Here's an example.
+
+Syntax Checkers
+---------------
+
+.. rst-class:: build
+
+* .. code-block:: bash
+
+     $ apache2ctl -t -D DUMP_VHOSTS
+     VirtualHost configuration:
+     0.0.0.0:80  is a NameVirtualHost
+       default server bke.ro (/etc/apache2/sites-enabled/10-bke.ro.conf:1)
+       port 80 namevhost bke.ro (/etc/apache2/sites-enabled/10-bke.ro.conf:1)
+       port 80 namevhost www.bke.ro (/etc/apache2/sites-enabled/10-www.bke.ro.conf:6)
+
+
+* .. code-block:: bash
+
+     $ puppet parser validate /etc/puppet/manifests/site.pp
+     Warning: The use of 'import' is deprecated at
+       /etc/puppet/manifests/site.pp:5. See http://links.puppetlabs.com/puppet-import-deprecation
+       (at /usr/lib/ruby/vendor_ruby/puppet/parser/parser_support.rb:110:in 'import')
+
+.. note::
+    * I wanted to show some good examples here
+
+Libraries
+---------
+
+.. rst-class:: build
+
+* .. code-block:: text
+   :emphasize-lines: 7
+
+    $ perl
+    perl: error while loading shared libraries:
+      libperl.so.5.18: cannot open shared object file: No such
+        file or directory
+
+* .. code-block:: bash
+
+    $ ldd $(which perl)
+        linux-vdso.so.1 =>  (0x00007ffc7929c000)
+        libperl.so.5.18 => not found
+        libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f67950c7000)
+        /lib64/ld-linux-x86-64.so.2 (0x0000560bf358a000)
+
+* .. code-block:: bash
+
+    $ LD_LIBRARY_PATH=/morelibs perl -e 'print "yay"; '
+    yay
+
+
 
 .. note::
     * Sometimes the problems aren't obvious from the logs
     * We have to dig deeper
 
-I don't know what's wrong, halp
--------------------------------
-
-* Let's trace it!
-
 strace - the system call tracer
 -------------------------------
 
+* Traces system calls
+* Traces signals
+* Benchmarking tool
+
+.. code-block:: text
+
+   $ strace -p $(pidof myprogram)
+
+.. note::
+   * Explain the syntax, tell them about to read the 'man' pages for each syscall to figure out arguments
+
+strace - useful incantations
+----------------------------
+
+* strace -f -p $PID
+* strace -e open -p $PID 2>&1 | grep $FILE
+* strace -c -f -p $PID ... ^C
+
+
 ltrace - the library call tracer
 --------------------------------
+
+* Traces external library calls
+* Accepts filter expressions
+* Similar to strace
+* Identical syntax
 
 lsof
 ----
 
 * Lists open file handles (including networks, listening sockets, linked libraries)
+
+My program is stuck, halp!
+--------------------------
+
+.. rst-class:: build
+
+* "There is seldom a problem that can't be figured using strace and lsof"
+
+.. note::
+    * This is a saying of mine. I'm trying to turn it into a piece of wisdom.
 
 gdb
 ---
